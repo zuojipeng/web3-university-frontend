@@ -1,0 +1,10 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 自定义字体或背景可以在这里添加 */
+body {
+  background: linear-gradient(to right bottom, #1a202c, #2d3748); /* 深色渐变背景 */
+  color: #e2e8f0; /* 浅色文字 */
+  min-height: 100vh;
+}

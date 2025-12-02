@@ -188,6 +188,12 @@ function FaucetPage() {
               <Link href="/staking" className="text-gray-300 hover:text-white px-3 py-2">
                 质押
               </Link>
+              <Link href="/treasury" className="text-gray-300 hover:text-white px-3 py-2">
+                理财
+              </Link>
+              <Link href="/profile" className="text-gray-300 hover:text-white px-3 py-2">
+                个人中心
+              </Link>
               {isConnected && address ? (
                 <>
                   <div className="bg-green-600 rounded-lg px-4 py-2">

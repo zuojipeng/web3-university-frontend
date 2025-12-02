@@ -57,11 +57,11 @@ export function useCourses() {
       if (courseIds && courseIds[index] !== undefined && courseIds[index] !== null) {
         const idFromArray = courseIds[index];
         finalId = typeof idFromArray === 'bigint' ? idFromArray.toString() : String(idFromArray);
-        console.log(`✅ 课程 ${index}: 使用 courseIds[${index}] = ${finalId}`);
+        // console.log(`✅ 课程 ${index}: 使用 courseIds[${index}] = ${finalId}`);
       } else if (idValue !== undefined && idValue !== null) {
         // 如果 courseIds 中没有，尝试从 course 对象中获取（即使可能是 0）
         finalId = typeof idValue === 'bigint' ? idValue.toString() : String(idValue);
-        console.log(`⚠️ 课程 ${index}: courseIds 中没有，使用 course.courseId = ${finalId}`);
+        // console.log(`⚠️ 课程 ${index}: courseIds 中没有，使用 course.courseId = ${finalId}`);
       } else {
         // 如果都没有，记录警告但不跳过（让用户能看到课程，即使 ID 可能有问题）
         console.warn('⚠️ 无法获取课程 ID，使用索引作为备用:', { idValue, courseIdsIndex: courseIds?.[index], course, index });

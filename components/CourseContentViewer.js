@@ -137,7 +137,7 @@ export default function CourseContentViewer({ contentHash, courseName, courseId,
     setError('');
 
     try {
-      console.log('开始从 IPFS 下载文件...', ipfsUrl);
+      // console.log('开始从 IPFS 下载文件...', ipfsUrl);
 
       // 从 IPFS 下载文件
       const response = await axios.get(ipfsUrl, {
@@ -146,11 +146,11 @@ export default function CourseContentViewer({ contentHash, courseName, courseId,
           const percentCompleted = Math.round(
             (progressEvent.loaded * 100) / (progressEvent.total || 1)
           );
-          console.log(`下载进度: ${percentCompleted}%`);
+          // console.log(`下载进度: ${percentCompleted}%`);
         }
       });
 
-      console.log('文件下载完成，大小:', response.data.size);
+      // console.log('文件下载完成，大小:', response.data.size);
 
       let fileBlob = response.data;
       let fileName = courseName || 'course-content';
@@ -158,7 +158,7 @@ export default function CourseContentViewer({ contentHash, courseName, courseId,
 
       // 检查是否是 ZIP 文件
       if (response.data.type === 'application/zip' || contentHash.endsWith('.zip')) {
-        console.log('检测到 ZIP 文件，开始解压...');
+        // console.log('检测到 ZIP 文件，开始解压...');
         
         try {
           const zip = new JSZip();
@@ -173,14 +173,14 @@ export default function CourseContentViewer({ contentHash, courseName, courseId,
             fileBlob = await file.async('blob');
             fileName = firstFile;
             fileType = fileBlob.type || 'application/octet-stream';
-            console.log('解压成功，文件名:', fileName);
+            // console.log('解压成功，文件名:', fileName);
           } else {
             throw new Error('ZIP 文件中没有找到文件');
           }
         } catch (zipError) {
           console.error('解压失败:', zipError);
           // 如果解压失败，尝试作为普通文件下载
-          console.log('解压失败，尝试作为普通文件下载');
+          // console.log('解压失败，尝试作为普通文件下载');
         }
       }
 
@@ -203,7 +203,7 @@ export default function CourseContentViewer({ contentHash, courseName, courseId,
         blob: fileBlob
       }));
 
-      console.log('✅ 文件下载成功');
+      // console.log('✅ 文件下载成功');
 
     } catch (err) {
       console.error('下载失败:', err);

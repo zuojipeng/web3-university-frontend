@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { parseUnits, decodeEventLog } from 'viem';
 import { useWriteContract, useWaitForTransactionReceipt, usePublicClient } from 'wagmi';
 import { COURSE_PLATFORM_ADDRESS, COURSE_PLATFORM_ABI } from '../config';
+import { CURRENT_CHAIN_ID } from '../lib/wagmi';
 import PinataUpload from './PinataUpload';
 
 const STATUS = {
@@ -64,8 +65,8 @@ export default function CreateCourseModal({ isOpen, onClose, onSuccess }) {
                 // courseId 是 indexed 参数，在 topics[1] 中（topics[0] 是事件签名）
                 // 也可以从 decoded.args 中获取
                 courseId = decoded.args.courseId || decoded.args[0];
-                console.log('✅ 从 CourseCreated 事件中解析到课程 ID:', courseId);
-                console.log('   事件参数:', decoded.args);
+                // console.log('✅ 从 CourseCreated 事件中解析到课程 ID:', courseId);
+                // console.log('   事件参数:', decoded.args);
                 break;
               }
             } catch (err) {
@@ -83,7 +84,7 @@ export default function CreateCourseModal({ isOpen, onClose, onSuccess }) {
       // 所以主要依赖事件
       
       if (courseId !== null && courseId !== undefined) {
-        console.log('✅ 课程创建成功，课程 ID:', courseId);
+        // console.log('✅ 课程创建成功，课程 ID:', courseId);
       } else {
         console.warn('⚠️ 无法从交易收据中解析课程 ID，但交易已成功');
       }
@@ -138,10 +139,10 @@ export default function CreateCourseModal({ isOpen, onClose, onSuccess }) {
       const currentChainIdHex = await window.ethereum.request({ method: 'eth_chainId' });
       const currentChainId = parseInt(currentChainIdHex, 16);
       
-      console.log('🔍 当前钱包链 ID:', currentChainId);
+      // console.log('🔍 当前钱包链 ID:', currentChainId);
       
       if (currentChainId !== 11155111) {
-        console.log('⚠️ 当前链不是 Sepolia，尝试切换...');
+        // console.log('⚠️ 当前链不是 Sepolia，尝试切换...');
         setStatus(STATUS.SIGNING);
         setErrorMessage('正在切换到 Sepolia 网络，请在钱包中确认...');
         
@@ -150,7 +151,7 @@ export default function CreateCourseModal({ isOpen, onClose, onSuccess }) {
             method: 'wallet_switchEthereumChain',
             params: [{ chainId: '0xaa36a7' }], // Sepolia
           });
-          console.log('✅ 已切换到 Sepolia');
+          // console.log('✅ 已切换到 Sepolia');
           // 等待一下让钱包状态同步
           await new Promise(resolve => setTimeout(resolve, 500));
         } catch (switchErr) {
@@ -186,10 +187,10 @@ export default function CreateCourseModal({ isOpen, onClose, onSuccess }) {
           contentHash, // IPFS content hash
           thumbnailHash || '' // thumbnailHash (可选)
         ],
-        chainId: 11155111, // 明确指定 Sepolia 链 ID
+        chainId: CURRENT_CHAIN_ID, // 使用当前配置的链 ID
       });
       
-      console.log('✅ 创建课程交易已发送，交易哈希:', hash);
+      // console.log('✅ 创建课程交易已发送，交易哈希:', hash);
       setStatus(STATUS.WAITING);
     } catch (err) {
       console.error('创建课程失败:', err);
@@ -212,11 +213,11 @@ export default function CreateCourseModal({ isOpen, onClose, onSuccess }) {
   };
 
   const handleContentUploadSuccess = (result) => {
-    console.log('收到上传成功回调，result:', result);
+    // console.log('收到上传成功回调，result:', result);
     const hash = result?.ipfsHash || result?.hash || result;
     if (hash) {
       setContentHash(hash);
-      console.log('课程内容文件上传成功，IPFS Hash:', hash);
+      // console.log('课程内容文件上传成功，IPFS Hash:', hash);
     } else {
       console.error('上传成功但未收到 IPFS Hash:', result);
       setErrorMessage('上传成功但未收到 IPFS Hash，请重试');
@@ -225,7 +226,7 @@ export default function CreateCourseModal({ isOpen, onClose, onSuccess }) {
 
   const handleThumbnailUploadSuccess = (result) => {
     setThumbnailHash(result.ipfsHash);
-    console.log('封面图上传成功，IPFS Hash:', result.ipfsHash);
+    // console.log('封面图上传成功，IPFS Hash:', result.ipfsHash);
   };
 
   const handleClose = (force) => {

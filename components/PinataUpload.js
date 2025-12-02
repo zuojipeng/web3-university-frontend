@@ -77,12 +77,12 @@ export default function PinataUpload({ onUploadSuccess, accept = "*", enableComp
     const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
     
     if (noCompressionExtensions.includes(fileExtension)) {
-      console.log(`文件格式 ${fileExtension} 不需要压缩，直接上传（支持在线预览）`);
+      // console.log(`文件格式 ${fileExtension} 不需要压缩，直接上传（支持在线预览）`);
       return file;
     }
     
     // 只压缩文档类文件（Word、Excel、PPT、文本等）
-    console.log(`文件格式 ${fileExtension} 将被压缩以节省存储空间`);
+    // console.log(`文件格式 ${fileExtension} 将被压缩以节省存储空间`);
     
 
     setCompressing(true);
@@ -102,12 +102,12 @@ export default function PinataUpload({ onUploadSuccess, accept = "*", enableComp
         compressionOptions: { level: 6 } // 压缩级别 1-9，6 是平衡点
       });
 
-      console.log(`压缩完成: ${formatFileSize(file.size)} -> ${formatFileSize(zipBlob.size)}`);
-      console.log(`压缩率: ${((1 - zipBlob.size / file.size) * 100).toFixed(1)}%`);
+      // console.log(`压缩完成: ${formatFileSize(file.size)} -> ${formatFileSize(zipBlob.size)}`);
+      // console.log(`压缩率: ${((1 - zipBlob.size / file.size) * 100).toFixed(1)}%`);
 
       // 如果压缩后文件更大，返回原文件
       if (zipBlob.size >= file.size) {
-        console.log('压缩后文件更大，使用原文件');
+        // console.log('压缩后文件更大，使用原文件');
         return file;
       }
 
@@ -194,7 +194,7 @@ export default function PinataUpload({ onUploadSuccess, accept = "*", enableComp
         throw new Error('未配置 Pinata 认证信息');
       }
 
-      console.log('开始上传到 Pinata IPFS...');
+      // console.log('开始上传到 Pinata IPFS...');
 
       // 发送请求
       const response = await axios.post(
@@ -203,7 +203,7 @@ export default function PinataUpload({ onUploadSuccess, accept = "*", enableComp
         config
       );
 
-      console.log('Pinata 响应:', response.data);
+      // console.log('Pinata 响应:', response.data);
 
       // 检查响应格式，Pinata 可能返回 IpfsHash 或 hash
       const ipfsHash = response.data.IpfsHash || response.data.hash || response.data.cid;
@@ -231,13 +231,13 @@ export default function PinataUpload({ onUploadSuccess, accept = "*", enableComp
 
       // 回调给父组件
       if (onUploadSuccess) {
-        console.log('调用 onUploadSuccess，传递 result:', result);
+        // console.log('调用 onUploadSuccess，传递 result:', result);
         onUploadSuccess(result);
       } else {
         console.warn('onUploadSuccess 回调未定义');
       }
 
-      console.log('✅ 上传成功:', result);
+      // console.log('✅ 上传成功:', result);
 
     } catch (err) {
       console.error('上传失败:', err);

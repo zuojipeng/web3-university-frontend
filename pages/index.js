@@ -14,6 +14,7 @@ import {
   YD_TOKEN_ADDRESS, 
   YD_TOKEN_ABI, 
 } from '../config';
+import { CURRENT_CHAIN_ID, IS_LOCAL_CHAIN } from '../lib/wagmi';
 import CreateCourseModal from '../components/CreateCourseModal';
 import PurchaseCourseModal from '../components/PurchaseCourseModal';
 import CourseContentViewer from '../components/CourseContentViewer';
@@ -59,15 +60,15 @@ export default function Home() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [isSwitching, setIsSwitching] = useState(false); // 切换网络中的简单状态
 
-  // 读取 YD 代币余额（只在 Sepolia 网络时读取）
+  // 读取 YD 代币余额（根据当前配置的网络读取）
   const { data: ydBalance, refetch: refetchBalance } = useReadContract({
     address: YD_TOKEN_ADDRESS,
     abi: YD_TOKEN_ABI,
     functionName: 'balanceOf',
     args: address ? [address] : undefined,
     query: {
-      // Sepolia 的 chainId 是 11155111
-      enabled: mounted && !!address && currentChainId === 11155111,
+      // 根据环境变量决定的目标链 ID
+      enabled: mounted && !!address && currentChainId === CURRENT_CHAIN_ID,
     },
   });
 
@@ -76,37 +77,47 @@ export default function Home() {
     refetchBalance();
   }, [refetchBalance]);
 
-  // 添加 Sepolia 网络到 MetaMask（如果用户钱包里还没有）
-  const addSepoliaNetwork = async () => {
+  // 目标网络名称（根据环境变量）
+  const targetNetworkName = IS_LOCAL_CHAIN ? 'Hardhat 本地链' : 'Sepolia 测试网';
+  const targetChainIdHex = IS_LOCAL_CHAIN ? '0x7a69' : '0xaa36a7'; // 31337 或 11155111
+
+  // 添加目标网络到 MetaMask
+  const addTargetNetwork = async () => {
     if (typeof window === 'undefined' || !window.ethereum) {
       alert('请安装 MetaMask 钱包');
       return false;
     }
 
+    const networkConfig = IS_LOCAL_CHAIN
+      ? {
+          chainId: '0x7a69', // 31337 in hex
+          chainName: 'Hardhat Local',
+          nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
+          rpcUrls: ['http://127.0.0.1:8545'],
+          blockExplorerUrls: [],
+        }
+      : {
+          chainId: '0xaa36a7', // 11155111 in hex
+          chainName: 'Sepolia',
+          nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
+          rpcUrls: ['https://sepolia.drpc.org'],
+          blockExplorerUrls: ['https://sepolia.etherscan.io'],
+        };
+
     try {
       await window.ethereum.request({
         method: 'wallet_addEthereumChain',
-        params: [{
-          chainId: '0xaa36a7', // 11155111 in hex
-          chainName: 'Sepolia',
-          nativeCurrency: {
-            name: 'Ether',
-            symbol: 'ETH',
-            decimals: 18
-          },
-          rpcUrls: ['https://sepolia.drpc.org'],
-          blockExplorerUrls: ['https://sepolia.etherscan.io']
-        }]
+        params: [networkConfig],
       });
       return true;
     } catch (err) {
-      console.error('添加 Sepolia 网络失败:', err);
+      console.error(`添加 ${targetNetworkName} 网络失败:`, err);
       return false;
     }
   };
 
-  // 手动切换到 Sepolia（如果当前钱包不在 Sepolia）
-  const switchToSepolia = useCallback(async () => {
+  // 手动切换到目标网络
+  const switchToTargetNetwork = useCallback(async () => {
     if (typeof window === 'undefined' || !window.ethereum) {
       alert('请安装 MetaMask 钱包');
       return;
@@ -116,28 +127,28 @@ export default function Home() {
     try {
       await window.ethereum.request({
         method: 'wallet_switchEthereumChain',
-        params: [{ chainId: '0xaa36a7' }],
+        params: [{ chainId: targetChainIdHex }],
       });
     } catch (err) {
-      console.error('切换到 Sepolia 失败:', err);
+      console.error(`切换到 ${targetNetworkName} 失败:`, err);
       // 如果网络未添加，尝试先添加再切换
       if (err.code === 4902) {
-        const added = await addSepoliaNetwork();
+        const added = await addTargetNetwork();
         if (added) {
           try {
             await window.ethereum.request({
               method: 'wallet_switchEthereumChain',
-              params: [{ chainId: '0xaa36a7' }],
+              params: [{ chainId: targetChainIdHex }],
             });
           } catch (err2) {
-            console.error('添加后切换 Sepolia 仍失败:', err2);
+            console.error(`添加后切换 ${targetNetworkName} 仍失败:`, err2);
           }
         }
       }
     } finally {
       setIsSwitching(false);
     }
-  }, []);
+  }, [targetChainIdHex, targetNetworkName]);
 
   if (!mounted) {
     return (
@@ -155,18 +166,18 @@ export default function Home() {
     }
     
     try {
-      console.log('正在连接钱包...');
+      // console.log('正在连接钱包...');
       await connect({ connector });
-      console.log('✅ 钱包连接成功');
+      // console.log('✅ 钱包连接成功');
 
-      // 连接成功后，如果不是 Sepolia，尝试切换一次
+      // 连接成功后，如果不是目标网络，尝试切换一次
       try {
         const chainIdHex = await window.ethereum?.request({ method: 'eth_chainId' });
         const chainNum = normalizeChainId(chainIdHex);
-        console.log('连接后检查链 ID:', chainNum, '(原始值:', chainIdHex, ')');
-        if (chainNum !== 11155111) {
-          console.log('⚠️ 连接后检测到非 Sepolia 网络，尝试切换到 Sepolia...');
-          await switchToSepolia();
+        // console.log('连接后检查链 ID:', chainNum, '(目标链 ID:', CURRENT_CHAIN_ID, ')');
+        if (chainNum !== CURRENT_CHAIN_ID) {
+          // console.log(`⚠️ 连接后检测到非 ${targetNetworkName} 网络，尝试切换...`);
+          await switchToTargetNetwork();
         }
       } catch (checkErr) {
         console.error('检查或切换链 ID 失败:', checkErr);
@@ -208,14 +219,20 @@ export default function Home() {
               <span className="text-2xl font-bold text-purple-400">Web3大学</span>
             </div>
 
-            <div className="flex items-center space-x-4">
-              <Link href="/faucet" className="text-gray-300 hover:text-white px-3 py-2 text-sm">
-                水龙头
-              </Link>
-              <Link href="/staking" className="text-gray-300 hover:text-white px-3 py-2 text-sm">
-                质押
-              </Link>
-              {isConnected && address ? (
+                    <div className="flex items-center space-x-4">
+                      <Link href="/faucet" className="text-gray-300 hover:text-white px-3 py-2 text-sm">
+                        水龙头
+                      </Link>
+                      <Link href="/staking" className="text-gray-300 hover:text-white px-3 py-2 text-sm">
+                        质押
+                      </Link>
+                      <Link href="/treasury" className="text-gray-300 hover:text-white px-3 py-2 text-sm">
+                        理财
+                      </Link>
+                      <Link href="/profile" className="text-gray-300 hover:text-white px-3 py-2 text-sm">
+                        个人中心
+                      </Link>
+                      {isConnected && address ? (
                 <>
                   <div className="bg-gray-700 rounded-lg px-4 py-2">
                     <p className="text-gray-400 text-xs">YD 余额</p>
@@ -262,9 +279,9 @@ export default function Home() {
           <div className="text-sm">
             {!isConnected ? (
               <p className="text-gray-400">未连接钱包</p>
-            ) : currentChainId === 11155111 ? (
+            ) : currentChainId === CURRENT_CHAIN_ID ? (
               <div className="flex items-center justify-center space-x-2">
-                <span className="text-green-400 font-semibold">✓ Sepolia 测试网 (11155111)</span>
+                <span className="text-green-400 font-semibold">✓ {targetNetworkName} ({CURRENT_CHAIN_ID})</span>
                 <span className="text-gray-500">•</span>
                 <span className="text-gray-400">已就绪</span>
               </div>
@@ -273,10 +290,10 @@ export default function Home() {
                 <div className="flex items-center space-x-2">
                   <span className="text-yellow-400 font-semibold">⚠️ 当前网络: Chain ID {currentChainId}</span>
                   <span className="text-gray-500">•</span>
-                  <span className="text-red-400">需要切换到 Sepolia</span>
+                  <span className="text-red-400">需要切换到 {targetNetworkName}</span>
                 </div>
                 <button
-                  onClick={switchToSepolia}
+                  onClick={switchToTargetNetwork}
                   disabled={isSwitching}
                   className="bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-2 rounded-lg font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
@@ -289,10 +306,10 @@ export default function Home() {
                       <span>切换中...</span>
                     </span>
                   ) : (
-                    '🔀 切换到 Sepolia 网络'
+                    `🔀 切换到 ${targetNetworkName}`
                   )}
                 </button>
-                <p className="text-gray-500 text-xs">请切换到 Sepolia 网络以使用所有功能</p>
+                <p className="text-gray-500 text-xs">请切换到 {targetNetworkName} 以使用所有功能</p>
               </div>
             ) : (
               <div className="flex items-center space-x-2">

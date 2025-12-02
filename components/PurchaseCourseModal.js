@@ -15,6 +15,7 @@ import {
   COURSE_PLATFORM_ABI,
   COURSE_PURCHASE_ABI,
 } from '../config';
+import { CURRENT_CHAIN_ID } from '../lib/wagmi';
 
 const STEP = {
   IDLE: 'idle',
@@ -122,8 +123,9 @@ export default function PurchaseCourseModal({
   const handlePurchase = useCallback(async () => {
     if (!course || !address) return;
 
-    // 验证 courseId
-    if (!course.id || course.id === '0' || course.id === 0) {
+    // 验证 courseId（注意：courseId 可以是 0，因为是从 0 开始的索引）
+    // 只有 undefined、null、空字符串才是无效的
+    if (course.id === undefined || course.id === null || course.id === '') {
       console.error('❌ 无效的课程 ID:', course.id);
       setStep(STEP.ERROR);
       setErrorMessage('无效的课程 ID，请刷新页面重试');
@@ -161,14 +163,10 @@ export default function PurchaseCourseModal({
       setStep(STEP.PURCHASING);
       setErrorMessage('');
 
-      // 确保 courseId 是有效的数字
-      const courseId = typeof course.id === 'string' ? BigInt(course.id) : BigInt(course.id || 0);
+      // 确保 courseId 是 BigInt（0 也是有效的 courseId，因为合约从 0 开始计数）
+      const courseId = BigInt(course.id);
       
-      console.log('📝 准备购买课程 - courseId:', courseId.toString(), 'course:', course);
-      
-      if (courseId === 0n) {
-        throw new Error('课程 ID 不能为 0');
-      }
+      // console.log('📝 准备购买课程 - courseId:', courseId.toString(), 'course:', course);
       
       // 使用 writeContractAsync 获取交易哈希
       // purchaseCourse 函数在 CoursePurchase 合约中，不在 CourseManager 中
@@ -177,11 +175,11 @@ export default function PurchaseCourseModal({
         abi: COURSE_PURCHASE_ABI,
         functionName: 'purchaseCourse',
         args: [courseId],
-        chainId: 11155111, // 明确指定 Sepolia 链 ID
+        chainId: CURRENT_CHAIN_ID, // 使用当前配置的链 ID
       });
 
-      console.log('✅ 购买交易已发送，交易哈希:', txHash);
-      console.log('purchaseTxHash (from hook):', purchaseTxHash);
+      // console.log('✅ 购买交易已发送，交易哈希:', txHash);
+      // console.log('purchaseTxHash (from hook):', purchaseTxHash);
       
       // 保存交易哈希到本地状态（作为备用）
       setLocalPurchaseTxHash(txHash);
@@ -242,10 +240,10 @@ export default function PurchaseCourseModal({
         abi: YD_TOKEN_ABI,
         functionName: 'approve',
         args: [COURSE_PURCHASE_ADDRESS, coursePrice],
-        chainId: 11155111, // 明确指定 Sepolia 链 ID
+        chainId: CURRENT_CHAIN_ID, // 使用当前配置的链 ID
       });
       
-      console.log('✅ 授权交易已发送，交易哈希:', txHash);
+      // console.log('✅ 授权交易已发送，交易哈希:', txHash);
       // hash 会自动存储在 approveTxHash 中
     } catch (err) {
       console.error('授权失败:', err);
@@ -315,8 +313,8 @@ export default function PurchaseCourseModal({
       return;
     }
 
-    console.log('🔍 开始手动检查交易状态:', txHash);
-    console.log('publicClient:', publicClient);
+    // console.log('🔍 开始手动检查交易状态:', txHash);
+    // console.log('publicClient:', publicClient);
 
     if (!publicClient) {
       console.error('❌ publicClient 未初始化');
@@ -326,19 +324,19 @@ export default function PurchaseCourseModal({
     }
 
     try {
-      console.log('⏳ 等待交易确认...');
+      // console.log('⏳ 等待交易确认...');
       const receipt = await publicClient.waitForTransactionReceipt({
         hash: txHash,
         timeout: 60000, // 60秒超时
         confirmations: 1,
       });
 
-      console.log('📄 收到交易收据:', receipt);
+      // console.log('📄 收到交易收据:', receipt);
 
       if (receipt && receipt.status === 'success') {
-        console.log('✅ 手动检查：交易确认成功!');
+        // console.log('✅ 手动检查：交易确认成功!');
         if (handledTxRef.current === txHash) {
-          console.log('⚠️ 交易已处理过，跳过');
+          // console.log('⚠️ 交易已处理过，跳过');
           return; // 已处理过
         }
         handledTxRef.current = txHash;
@@ -370,13 +368,13 @@ export default function PurchaseCourseModal({
     const txHash = purchaseTxHash || localPurchaseTxHash;
     if (!txHash) return; // 如果没有交易哈希，不处理
     
-    console.log('🔍 检查交易确认状态 - purchaseTxHash:', purchaseTxHash, 'localPurchaseTxHash:', localPurchaseTxHash);
+    // console.log('🔍 检查交易确认状态 - purchaseTxHash:', purchaseTxHash, 'localPurchaseTxHash:', localPurchaseTxHash);
     
     // 如果交易成功
     if (isPurchaseSuccess) {
       if (handledTxRef.current === txHash) return; // 已处理过
       handledTxRef.current = txHash;
-      console.log('✅ 购买交易确认成功:', txHash);
+      // console.log('✅ 购买交易确认成功:', txHash);
       setStep(STEP.SUCCESS);
       onSuccess?.();
       setTimeout(() => {
@@ -390,7 +388,7 @@ export default function PurchaseCourseModal({
       console.error('购买交易确认失败:', purchaseReceiptError);
       // 如果 useWaitForTransactionReceipt 失败，尝试手动检查
       if (!manualCheckRef.current && txHash) {
-        console.log('⚠️ useWaitForTransactionReceipt 失败，尝试手动检查...');
+        // console.log('⚠️ useWaitForTransactionReceipt 失败，尝试手动检查...');
         manualCheckRef.current = true;
         manuallyCheckTransaction(txHash);
       }
@@ -411,23 +409,23 @@ export default function PurchaseCourseModal({
 
     // 如果交易哈希存在，立即启动手动检查（作为备用）
     if (txHash && !isPurchaseSuccess && !handledTxRef.current) {
-      console.log('📝 检测到交易哈希，准备启动手动检查:', txHash);
-      console.log('当前状态 - isPurchaseSuccess:', isPurchaseSuccess, 'isPurchaseConfirming:', isPurchaseConfirming);
+      // console.log('📝 检测到交易哈希，准备启动手动检查:', txHash);
+      // console.log('当前状态 - isPurchaseSuccess:', isPurchaseSuccess, 'isPurchaseConfirming:', isPurchaseConfirming);
       
       // 延迟一下，给 useWaitForTransactionReceipt 一些时间
       const checkTimeout = setTimeout(() => {
         if (!isPurchaseSuccess && !handledTxRef.current && !manualCheckRef.current) {
-          console.log('🔍 启动手动交易检查（备用方案）...');
-          console.log('交易哈希:', txHash);
+          // console.log('🔍 启动手动交易检查（备用方案）...');
+          // console.log('交易哈希:', txHash);
           manualCheckRef.current = true;
           manuallyCheckTransaction(txHash);
         } else {
-          console.log('⏭️ 跳过手动检查 - isPurchaseSuccess:', isPurchaseSuccess, 'handledTxRef:', handledTxRef.current, 'manualCheckRef:', manualCheckRef.current);
+          // console.log('⏭️ 跳过手动检查 - isPurchaseSuccess:', isPurchaseSuccess, 'handledTxRef:', handledTxRef.current, 'manualCheckRef:', manualCheckRef.current);
         }
       }, 2000); // 2秒后启动手动检查（缩短等待时间）
 
       return () => {
-        console.log('🧹 清理手动检查定时器');
+        // console.log('🧹 清理手动检查定时器');
         clearTimeout(checkTimeout);
       };
     }
@@ -459,8 +457,8 @@ export default function PurchaseCourseModal({
   if (!isOpen || !course) return null;
 
   // 调试：打印课程信息
-  console.log('📋 PurchaseCourseModal - course 对象:', course);
-  console.log('📋 course.id:', course.id, '类型:', typeof course.id);
+  // console.log('📋 PurchaseCourseModal - course 对象:', course);
+  // console.log('📋 course.id:', course.id, '类型:', typeof course.id);
 
   // 检查是否是自己的课程
   const isMyCourse = address && course?.author && 
@@ -707,13 +705,13 @@ export default function PurchaseCourseModal({
                       <button
                         onClick={() => {
                           const txHash = purchaseTxHash || localPurchaseTxHash;
-                          console.log('🔄 用户点击手动检查按钮');
-                          console.log('交易哈希:', txHash);
-                          console.log('purchaseTxHash (from hook):', purchaseTxHash);
-                          console.log('localPurchaseTxHash:', localPurchaseTxHash);
-                          console.log('publicClient:', publicClient);
-                          console.log('isPurchaseSuccess:', isPurchaseSuccess);
-                          console.log('isPurchaseConfirming:', isPurchaseConfirming);
+                          // console.log('🔄 用户点击手动检查按钮');
+                          // console.log('交易哈希:', txHash);
+                          // console.log('purchaseTxHash (from hook):', purchaseTxHash);
+                          // console.log('localPurchaseTxHash:', localPurchaseTxHash);
+                          // console.log('publicClient:', publicClient);
+                          // console.log('isPurchaseSuccess:', isPurchaseSuccess);
+                          // console.log('isPurchaseConfirming:', isPurchaseConfirming);
                           manualCheckRef.current = false; // 重置标志，允许重新检查
                           manuallyCheckTransaction(txHash);
                         }}

@@ -6,7 +6,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "deploy:cloudflare": "npm run build && npx wrangler pages deploy out --project-name=web3-university"
+    "deploy:cloudflare": "npm run build && npx wrangler pages deploy out --project-name=web3-university",
+    "switch:local": "echo 'NEXT_PUBLIC_USE_LOCAL_CHAIN=true' > .env.local && echo '✅ 已切换到 Hardhat 本地链 (Chain ID: 31337)' && echo '⚠️  请重启开发服务器: npm run dev'",
+    "switch:sepolia": "echo 'NEXT_PUBLIC_USE_LOCAL_CHAIN=false' > .env.local && echo '✅ 已切换到 Sepolia 测试网 (Chain ID: 11155111)' && echo '⚠️  请重启开发服务器: npm run dev'"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.90.10",

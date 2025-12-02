@@ -1,7 +1,7 @@
 {
   "contracts": {
     "YDToken": {
-      "address": "0x02e213877af42336dcf57cf21e60ae5734222ccc",
+      "address": "0x6cbf86f840903570297fd3181c8816384dc9d54a",
       "abi": [
         {
           "inputs": [],
@@ -442,7 +442,7 @@
       ]
     },
     "CourseManager": {
-      "address": "0x20ab1ecb65eda6798d16619c8ae733d39f8f0d6a",
+      "address": "0x815a66e952eacc476738cc7fd4c2686c05fd3189",
       "abi": [
         {
           "inputs": [],
@@ -963,7 +963,7 @@
       ]
     },
     "CoursePurchase": {
-      "address": "0x3ccd4c3adc50bd5b51bf81962a5a6c31bbd336af",
+      "address": "0xd3479d4331ff45d49beb09c29ec8bc16b3d95343",
       "abi": [
         {
           "inputs": [
@@ -1436,7 +1436,7 @@
       ]
     },
     "YDFaucet": {
-      "address": "0x535bc693042a7f058dff66d13b8a04b28ee4c1f8",
+      "address": "0x2e8e6b3f7cb152e8488c243d47b905363f7b7242",
       "abi": [
         {
           "inputs": [
@@ -1771,7 +1771,7 @@
       ]
     },
     "YDStakingSafe": {
-      "address": "0x2628e6bc31a8d25ee319329f6cff51e15ab2b633",
+      "address": "0xab108671e5d0c07d3f39adc73c1e8ed5e587595e",
       "abi": [
         {
           "inputs": [

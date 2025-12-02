@@ -230,14 +230,20 @@ function StakingPage() {
               <span className="text-2xl font-bold text-purple-400">Web3大学</span>
             </Link>
 
-            <div className="flex items-center space-x-4">
-              <Link href="/" className="text-gray-300 hover:text-white px-3 py-2">
-                课程
-              </Link>
-              <Link href="/faucet" className="text-gray-300 hover:text-white px-3 py-2">
-                水龙头
-              </Link>
-              {isConnected && address ? (
+                    <div className="flex items-center space-x-4">
+                      <Link href="/" className="text-gray-300 hover:text-white px-3 py-2">
+                        课程
+                      </Link>
+                      <Link href="/faucet" className="text-gray-300 hover:text-white px-3 py-2">
+                        水龙头
+                      </Link>
+                      <Link href="/treasury" className="text-gray-300 hover:text-white px-3 py-2">
+                        理财
+                      </Link>
+                      <Link href="/profile" className="text-gray-300 hover:text-white px-3 py-2">
+                        个人中心
+                      </Link>
+                      {isConnected && address ? (
                 <>
                   <div className="bg-green-600 rounded-lg px-4 py-2">
                     <p className="text-green-100 text-xs">已连接</p>

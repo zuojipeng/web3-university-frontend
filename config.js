@@ -12,6 +12,8 @@ export const COURSE_PLATFORM_ADDRESS = contracts.CourseManager?.address || '';
 export const COURSE_PURCHASE_ADDRESS = contracts.CoursePurchase?.address || '';
 export const YD_FAUCET_ADDRESS = contracts.YDFaucet?.address || '';
 export const YD_STAKING_ADDRESS = contracts.YDStakingSafe?.address || '';
+export const USER_PROFILE_ADDRESS = contracts.UserProfile?.address || '';
+export const INSTRUCTOR_YIELD_ADDRESS = contracts.InstructorYieldManager?.address || '';
 
 // 合约 ABI
 export const YD_TOKEN_ABI = contracts.YDToken?.abi || [];
@@ -21,3 +23,5 @@ export const COURSE_PLATFORM_ABI = contracts.CourseManager?.abi || [];
 export const COURSE_PURCHASE_ABI = contracts.CoursePurchase?.abi || [];
 export const YD_FAUCET_ABI = contracts.YDFaucet?.abi || [];
 export const YD_STAKING_ABI = contracts.YDStakingSafe?.abi || [];
+export const USER_PROFILE_ABI = contracts.UserProfile?.abi || [];
+export const INSTRUCTOR_YIELD_ABI = contracts.InstructorYieldManager?.abi || [];
